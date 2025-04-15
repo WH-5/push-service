@@ -1,13 +1,14 @@
 syntax = "proto3";
 package kratos.api;
 
-option go_package = "push-service/internal/conf;conf";
+option go_package = "github.com/WH-5/push-service/internal/conf;conf";
 
 import "google/protobuf/duration.proto";
 
 message Bootstrap {
   Server server = 1;
   Data data = 2;
+  Bizfig bizfig=3;
 }
 
 message Server {
@@ -23,6 +24,12 @@ message Server {
   }
   HTTP http = 1;
   GRPC grpc = 2;
+  string name=3;
+  string version=4;
+  Registry registry=5;
+}
+message Registry {
+  string consul = 1;
 }
 
 message Data {
@@ -35,7 +42,16 @@ message Data {
     string addr = 2;
     google.protobuf.Duration read_timeout = 3;
     google.protobuf.Duration write_timeout = 4;
+    google.protobuf.Duration dialTimeout = 7;
+    int32 database =5;
+    string password=6;
+  }
+  message Other{
   }
   Database database = 1;
   Redis redis = 2;
+  Other other =3;
+}
+message Bizfig {
+  string JWT_SECRET_KEY=1;
 }

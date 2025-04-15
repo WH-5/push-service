@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package api.user.v1;
+
+//import "google/api/annotations.proto";
+import "validate/validate.proto";
+
+option go_package = "github.com/WH-5/push-service/api/user/v1;v1";
+option java_multiple_files = true;
+option java_package = "api.user.v1";
+
+
+service User{
+	rpc GetIdByUnique(GetIdByUniqueRequest)returns(GetIdByUniqueReply);
+}
+
+
+message GetIdByUniqueRequest{
+	string unique_id=1 [(validate.rules).string = {min_len: 1, max_len: 20, pattern: "^[a-zA-Z0-9_-]{1,20}$"}];
+}
+message GetIdByUniqueReply{
+	uint64 user_id=1;
+}

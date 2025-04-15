@@ -7,11 +7,11 @@
 package main
 
 import (
-	"push-service/internal/biz"
-	"push-service/internal/conf"
-	"push-service/internal/data"
-	"push-service/internal/server"
-	"push-service/internal/service"
+	"github.com/WH-5/push-service/internal/biz"
+	"github.com/WH-5/push-service/internal/conf"
+	"github.com/WH-5/push-service/internal/data"
+	"github.com/WH-5/push-service/internal/server"
+	"github.com/WH-5/push-service/internal/service"
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/log"
 )
@@ -23,17 +23,17 @@ import (
 // Injectors from wire.go:
 
 // wireApp init kratos application.
-func wireApp(confServer *conf.Server, confData *conf.Data, logger log.Logger) (*kratos.App, func(), error) {
+func wireApp(confServer *conf.Server, confData *conf.Data, bizfig *conf.Bizfig, logger log.Logger) (*kratos.App, func(), error) {
 	dataData, cleanup, err := data.NewData(confData, logger)
 	if err != nil {
 		return nil, nil, err
 	}
-	greeterRepo := data.NewGreeterRepo(dataData, logger)
-	greeterUsecase := biz.NewGreeterUsecase(greeterRepo, logger)
-	greeterService := service.NewGreeterService(greeterUsecase)
-	grpcServer := server.NewGRPCServer(confServer, greeterService, logger)
-	httpServer := server.NewHTTPServer(confServer, greeterService, logger)
-	app := newApp(logger, grpcServer, httpServer)
+	pushRepo := data.NewPushRepo(dataData, logger)
+	pushUsecase := biz.NewPushUsecase(bizfig, pushRepo, logger)
+	pushService := service.NewPushService(confServer, pushUsecase)
+	grpcServer := server.NewGRPCServer(confServer, pushService, logger)
+	httpServer := server.NewHTTPServer(confServer, pushService, logger)
+	app := newApp(logger, grpcServer, httpServer, confServer)
 	return app, func() {
 		cleanup()
 	}, nil

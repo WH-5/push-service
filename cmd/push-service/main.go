@@ -2,9 +2,13 @@ package main
 
 import (
 	"flag"
+	"fmt"
+	"github.com/go-kratos/kratos/contrib/registry/consul/v2"
+	"github.com/hashicorp/consul/api"
 	"os"
+	"time"
 
-	"push-service/internal/conf"
+	"github.com/WH-5/push-service/internal/conf"
 
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/config"
@@ -29,21 +33,50 @@ var (
 	id, _ = os.Hostname()
 )
 
+func getConfigPath() string {
+	//if _, err := os.Stat("/app/configs"); err == nil {
+	//	return "/app/configs" // 适用于 Docker 容器
+	//}
+	if _, err := os.Stat("../../configs"); err == nil {
+		return "../../configs" // 适用于 kratos run
+	}
+	return "configs" // 适用于 go run main.go
+}
 func init() {
-	flag.StringVar(&flagconf, "conf", "../../configs", "config path, eg: -conf config.yaml")
+	flag.StringVar(&flagconf, "conf", getConfigPath(), "config path, eg: -conf config.yaml")
+	// 设置全局时区为 UTC+8
+	loc, err := time.LoadLocation("Asia/Shanghai")
+	if err != nil {
+		fmt.Println("Error loading location:", err)
+		return
+	}
+	// 设置全局时区
+	time.Local = loc
 }
 
-func newApp(logger log.Logger, gs *grpc.Server, hs *http.Server) *kratos.App {
+func newApp(logger log.Logger, gs *grpc.Server, hs *http.Server, server *conf.Server) *kratos.App {
+	cg := api.DefaultConfig()
+	cg.Address = server.Registry.GetConsul()
+	// new consul client
+	client, err := api.NewClient(cg)
+	if err != nil {
+		panic(err)
+	}
+
+	// new reg with consul client
+	reg := consul.New(client)
+
 	return kratos.New(
-		kratos.ID(id),
-		kratos.Name(Name),
-		kratos.Version(Version),
+		kratos.ID(id+"-"+server.GetName()),
+		kratos.Name(server.GetName()),
+		kratos.Version(server.GetVersion()),
 		kratos.Metadata(map[string]string{}),
 		kratos.Logger(logger),
 		kratos.Server(
 			gs,
 			hs,
 		),
+		kratos.Registrar(reg),
 	)
 }
 
@@ -74,7 +107,7 @@ func main() {
 		panic(err)
 	}
 
-	app, cleanup, err := wireApp(bc.Server, bc.Data, logger)
+	app, cleanup, err := wireApp(bc.Server, bc.Data, bc.Bizfig, logger)
 	if err != nil {
 		panic(err)
 	}

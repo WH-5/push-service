@@ -1,9 +1,11 @@
 package server
 
 import (
-	v1 "push-service/api/helloworld/v1"
-	"push-service/internal/conf"
-	"push-service/internal/service"
+	"github.com/WH-5/push-service/internal/conf"
+	"github.com/WH-5/push-service/internal/middleware"
+	"github.com/WH-5/push-service/internal/service"
+	"github.com/go-kratos/kratos/v2/middleware/logging"
+	"github.com/go-kratos/kratos/v2/middleware/validate"
 
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/middleware/recovery"
@@ -11,10 +13,13 @@ import (
 )
 
 // NewHTTPServer new an HTTP server.
-func NewHTTPServer(c *conf.Server, greeter *service.GreeterService, logger log.Logger) *http.Server {
+func NewHTTPServer(c *conf.Server, pushService *service.PushService, logger log.Logger) *http.Server {
 	var opts = []http.ServerOption{
 		http.Middleware(
+			middleware.AuthCheckExist(pushService),
 			recovery.Recovery(),
+			logging.Server(logger),
+			validate.Validator(),
 		),
 	}
 	if c.Http.Network != "" {
@@ -27,6 +32,9 @@ func NewHTTPServer(c *conf.Server, greeter *service.GreeterService, logger log.L
 		opts = append(opts, http.Timeout(c.Http.Timeout.AsDuration()))
 	}
 	srv := http.NewServer(opts...)
-	v1.RegisterGreeterHTTPServer(srv, greeter)
+	srv.HandleFunc("/ws", service.NewWSHandler(pushService))
+
+	//v1.RegisterGreeterHTTPServer(srv, greeter)
+
 	return srv
 }
