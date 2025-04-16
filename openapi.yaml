@@ -3,8 +3,7 @@
 
 openapi: 3.0.3
 info:
-    title: Greeter API
-    description: The greeting service definition.
+    title: ""
     version: 0.0.1
 paths:
     /helloworld/{name}:
@@ -26,8 +25,23 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/helloworld.v1.HelloReply'
+    /push/status:
+        get:
+            tags:
+                - Push
+            operationId: Push_GetOnlineStatus
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/api.push.v1.GetOnlineStatusReply'
 components:
     schemas:
+        api.push.v1.GetOnlineStatusReply:
+            type: object
+            properties: {}
         helloworld.v1.HelloReply:
             type: object
             properties:
@@ -36,3 +50,5 @@ components:
             description: The response message containing the greetings
 tags:
     - name: Greeter
+      description: The greeting service definition.
+    - name: Push

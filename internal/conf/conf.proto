@@ -43,14 +43,14 @@ message Data {
     google.protobuf.Duration read_timeout = 3;
     google.protobuf.Duration write_timeout = 4;
     google.protobuf.Duration dialTimeout = 7;
+    google.protobuf.Duration message_expired_time_hour = 8;
     int32 database =5;
     string password=6;
   }
-  message Other{
-  }
+
   Database database = 1;
   Redis redis = 2;
-  Other other =3;
+
 }
 message Bizfig {
   string JWT_SECRET_KEY=1;

@@ -19,7 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Push_PushMsg_FullMethodName = "/api.push.v1.Push/PushMsg"
+	Push_PushMsg_FullMethodName         = "/api.push.v1.Push/PushMsg"
+	Push_GetOnlineStatus_FullMethodName = "/api.push.v1.Push/GetOnlineStatus"
 )
 
 // PushClient is the client API for Push service.
@@ -27,6 +28,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type PushClient interface {
 	PushMsg(ctx context.Context, in *PushMsgRequest, opts ...grpc.CallOption) (*PushMsgReply, error)
+	GetOnlineStatus(ctx context.Context, in *GetOnlineStatusRequest, opts ...grpc.CallOption) (*GetOnlineStatusReply, error)
 }
 
 type pushClient struct {
@@ -47,11 +49,22 @@ func (c *pushClient) PushMsg(ctx context.Context, in *PushMsgRequest, opts ...gr
 	return out, nil
 }
 
+func (c *pushClient) GetOnlineStatus(ctx context.Context, in *GetOnlineStatusRequest, opts ...grpc.CallOption) (*GetOnlineStatusReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetOnlineStatusReply)
+	err := c.cc.Invoke(ctx, Push_GetOnlineStatus_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PushServer is the server API for Push service.
 // All implementations must embed UnimplementedPushServer
 // for forward compatibility.
 type PushServer interface {
 	PushMsg(context.Context, *PushMsgRequest) (*PushMsgReply, error)
+	GetOnlineStatus(context.Context, *GetOnlineStatusRequest) (*GetOnlineStatusReply, error)
 	mustEmbedUnimplementedPushServer()
 }
 
@@ -64,6 +77,9 @@ type UnimplementedPushServer struct{}
 
 func (UnimplementedPushServer) PushMsg(context.Context, *PushMsgRequest) (*PushMsgReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PushMsg not implemented")
+}
+func (UnimplementedPushServer) GetOnlineStatus(context.Context, *GetOnlineStatusRequest) (*GetOnlineStatusReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetOnlineStatus not implemented")
 }
 func (UnimplementedPushServer) mustEmbedUnimplementedPushServer() {}
 func (UnimplementedPushServer) testEmbeddedByValue()              {}
@@ -104,6 +120,24 @@ func _Push_PushMsg_Handler(srv interface{}, ctx context.Context, dec func(interf
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Push_GetOnlineStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetOnlineStatusRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PushServer).GetOnlineStatus(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Push_GetOnlineStatus_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PushServer).GetOnlineStatus(ctx, req.(*GetOnlineStatusRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Push_ServiceDesc is the grpc.ServiceDesc for Push service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -114,6 +148,10 @@ var Push_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "PushMsg",
 			Handler:    _Push_PushMsg_Handler,
+		},
+		{
+			MethodName: "GetOnlineStatus",
+			Handler:    _Push_GetOnlineStatus_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

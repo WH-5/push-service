@@ -68,17 +68,18 @@ func NewWSHandler(service *PushService) func(w http.ResponseWriter, r *http.Requ
 		}(conn)
 
 		//成功建立连接
+		//上线函数
 		service.UC.OnConnect(uint(uid.(float64)), conn)
 		fmt.Println("WebSocket 已连接")
 
 		// 设置心跳：60秒内未收到任何消息将断开连接
-		err = conn.SetReadDeadline(time.Now().Add(20 * time.Second))
+		err = conn.SetReadDeadline(time.Now().Add(60 * time.Second))
 		if err != nil {
 			http.Error(w, fmt.Sprintf("%s", err), http.StatusInternalServerError)
 			return
 		}
 		conn.SetPongHandler(func(string) error {
-			err := conn.SetReadDeadline(time.Now().Add(20 * time.Second))
+			err := conn.SetReadDeadline(time.Now().Add(60 * time.Second))
 			if err != nil {
 				return err
 			}
@@ -89,6 +90,7 @@ func NewWSHandler(service *PushService) func(w http.ResponseWriter, r *http.Requ
 			messageType, message, err := conn.ReadMessage()
 			if err != nil {
 				//断开了
+				//下线函数
 				service.UC.OnDisconnect(uint(uid.(float64)))
 				log.Println("读取消息失败:", err)
 				break
@@ -100,6 +102,7 @@ func NewWSHandler(service *PushService) func(w http.ResponseWriter, r *http.Requ
 			err = conn.WriteMessage(messageType, []byte(reply))
 			if err != nil {
 				//同样断开
+				//下线函数
 				service.UC.OnDisconnect(uint(uid.(float64)))
 				log.Println("发送消息失败:", err)
 				break

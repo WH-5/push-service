@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package api.push.v1;
 
-//import "google/api/annotations.proto";
+import "google/api/annotations.proto";
 
 option go_package = "github.com/WH-5/push-service/api/push/v1;v1";
 option java_multiple_files = true;
@@ -10,11 +10,22 @@ option java_package = "api.push.v1";
 
 service Push {
 	rpc PushMsg(PushMsgRequest)returns(PushMsgReply);
-
+	rpc	GetOnlineStatus(GetOnlineStatusRequest)returns(GetOnlineStatusReply){
+		option (google.api.http) = {
+			get: "/push/status"
+		};
+	}
 }
 message PushMsgRequest{
-
+	uint64 user_id=1;
+	string msg=2;
 }
 message PushMsgReply{
+string msg=1;
+}
+message GetOnlineStatusRequest{
+
+}
+message GetOnlineStatusReply{
 
 }

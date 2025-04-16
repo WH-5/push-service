@@ -15,12 +15,14 @@ data:
     #    source: postgres://root:whwhwhwhwhwhwhwh12321wh@database:5432/friend_service?sslmode=disable&TimeZone=Asia/Shanghai
     source: postgres://root:whwhwhwhwhwhwhwh12321wh@localhost:5432/friend_service?sslmode=disable&TimeZone=Asia/Shanghai
   redis:
-    #    addr: redis:6379
+    #    addr: ${REDIS_ADDR}
     addr: localhost:6379
+    #    addr: redis:6379
     read_timeout: 0.2s
     write_timeout: 0.2s
     db: 0
     password: "123456"
     dial_timeout: 5s
+    message_expired_time_hour: "43200s" #控制 离线消息的过期时间，单位是小时，如果期间收到消息会刷新时长
 bizfig:
   JWT_SECRET_KEY: test #jwt的密钥

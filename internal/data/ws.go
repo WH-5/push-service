@@ -8,7 +8,6 @@ import (
 type WSData struct {
 	//连接池
 	CM *ConnManager
-
 	//在线用户
 	OnlineUsers sync.Map // map[userID] -> true
 }
@@ -32,7 +31,7 @@ func (ws *WSData) Add(userID uint, conn *websocket.Conn) {
 		_ = old.(*websocket.Conn).Close() // 踢掉旧连接
 	}
 	ws.CM.conns.Store(userID, conn)
-	//SetUserOnline(userID) // 通知上线
+	ws.SetUserOnline(userID) // 通知上线
 }
 
 // Get 获取连接
