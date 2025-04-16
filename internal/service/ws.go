@@ -16,6 +16,7 @@ import (
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
 		// 不校验来源，方便测试
+		//TODO 需要限制来源
 		return true
 	},
 }

@@ -29,6 +29,17 @@ func NewPushService(c *conf.Server, usecase *biz.PushUsecase) *PushService {
 	}
 }
 
+// PushMsg 推送消息
 func (s *PushService) PushMsg(ctx context.Context, req *pb.PushMsgRequest) (*pb.PushMsgReply, error) {
-	return &pb.PushMsgReply{}, nil
+
+	err := s.UC.PushMessage(uint(req.GetUserId()), req.GetMsg())
+	if err != nil {
+		return nil, PushMessageError(err)
+	}
+	return &pb.PushMsgReply{Msg: "send success"}, nil
+}
+
+// GetOnlineStatus 获取在线状态
+func (s *PushService) GetOnlineStatus(ctx context.Context, req *pb.GetOnlineStatusRequest) (*pb.GetOnlineStatusReply, error) {
+	return &pb.GetOnlineStatusReply{}, nil
 }
