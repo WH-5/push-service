@@ -96,18 +96,32 @@ func NewWSHandler(service *PushService) func(w http.ResponseWriter, r *http.Requ
 				log.Println("读取消息失败:", err)
 				break
 			}
-			log.Printf("收到消息: %s\n", message)
-
-			// 向客户端原样发送消息
-			reply := fmt.Sprintf("你发的是：%s", message)
-			err = conn.WriteMessage(messageType, []byte(reply))
-			if err != nil {
-				//同样断开
-				//下线函数
-				service.UC.OnDisconnect(uint(uid.(float64)))
-				log.Println("发送消息失败:", err)
-				break
+			if len(message) == 0 {
+				log.Println("ping")
+				err = conn.WriteMessage(websocket.PongMessage, []byte("pong"))
+				if err != nil {
+					service.UC.OnDisconnect(uint(uid.(float64)))
+					log.Println("发送 pong 消息失败:", err)
+					break
+				}
+			} else {
+				log.Printf("收到消息: %s\n", message)
+				reply := fmt.Sprintf("你发的是：%s", message)
+				err = conn.WriteMessage(messageType, []byte(reply))
+				if err != nil {
+					//同样断开
+					//下线函数
+					service.UC.OnDisconnect(uint(uid.(float64)))
+					log.Println("发送消息失败:", err)
+					break
+				}
 			}
+			// 向客户端原样发送消息
+			//if string(message) == "ping" {
+			//	//ping 测试
+			//	continue
+			//}
+
 		}
 	}
 
