@@ -1,13 +1,14 @@
 package biz
 
 import (
+	"encoding/json"
 	"github.com/WH-5/push-service/internal/conf"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/gorilla/websocket"
 )
 
 type PushRepo interface {
-	Store(uid uint, msg string) error
+	Store(uid uint, msg []byte) error
 	PopAll(uid uint) ([]string, error)
 	Online(id uint, conn *websocket.Conn)
 	Offline(id uint)
@@ -25,7 +26,7 @@ func NewPushUsecase(cf *conf.Bizfig, repo PushRepo, logger log.Logger) *PushUsec
 }
 
 // PushMessage 推送消息
-func (u *PushUsecase) PushMessage(userId uint, msg string) error {
+func (u *PushUsecase) PushMessage(userId uint, msg []byte, m_type int) error {
 	//在线
 	on := u.repo.IsOnline(userId)
 	if on {
@@ -35,7 +36,12 @@ func (u *PushUsecase) PushMessage(userId uint, msg string) error {
 			return err
 		}
 		//发送消息
-		err = conn.WriteMessage(websocket.TextMessage, []byte(msg))
+		data := map[string]interface{}{
+			"type":    m_type,
+			"payload": msg,
+		}
+		b, err := json.Marshal(data)
+		err = conn.WriteMessage(websocket.TextMessage, b)
 		if err == nil {
 			//发送成功
 			return nil

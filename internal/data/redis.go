@@ -13,7 +13,7 @@ type RedisMessageCache struct {
 }
 
 // Store 把离线消息存入缓存
-func (d *pushRepo) Store(uid uint, msg string) error {
+func (d *pushRepo) Store(uid uint, msg []byte) error {
 	ctx := context.Background()
 	key := fmt.Sprintf("O%d", uid)
 

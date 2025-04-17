@@ -20,8 +20,8 @@ service Push {
 message PushMsgRequest{
 	uint64 user_id=1;
 	int32 msg_type=2;//1聊天消息 2好友关系消息
-	google.protobuf.Any payload = 3;
-	int64 timestamp = 4;
+	bytes payload = 3;
+//	int64 timestamp = 4;
 }
 message ChatPayload {
 //	聊天消息
@@ -35,7 +35,6 @@ message FriendPayload {
 
 message PushMsgReply{
 string msg=1;
-int64 timestamp=2;
 }
 message GetOnlineStatusRequest{
 
