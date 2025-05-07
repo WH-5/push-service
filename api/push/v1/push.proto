@@ -4,6 +4,7 @@ package api.push.v1;
 
 import "google/api/annotations.proto";
 import "google/protobuf/any.proto";
+import "validate/validate.proto";
 
 option go_package = "github.com/WH-5/push-service/api/push/v1;v1";
 option java_multiple_files = true;
@@ -18,23 +19,23 @@ service Push {
 	}
 }
 message PushMsgRequest{
-	uint64 user_id=1;
+	string to_unique=1 [(validate.rules).string = {min_len: 1, max_len: 20, pattern: "^[a-zA-Z0-9_-]{1,20}$"}];
+	uint64 self_user_id=4;
 	int32 msg_type=2;//1聊天消息 2好友关系消息
-	bytes payload = 3;
-//	int64 timestamp = 4;
+	bytes payload = 3;//消息内容
+//	int64 timestamp = 5;
 }
+message PushMsgReply{
+string msg=1;
+}
+
 message ChatPayload {
-//	聊天消息
+	//	聊天消息
 	string content = 1;
 	string content_type = 2;
 }
 message FriendPayload {
 	int32 type=1;//1好友请求 2好友请求接受 3好友请求拒绝 4好友删除
-}
-
-
-message PushMsgReply{
-string msg=1;
 }
 message GetOnlineStatusRequest{
 

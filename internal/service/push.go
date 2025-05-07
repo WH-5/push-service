@@ -32,8 +32,13 @@ func NewPushService(c *conf.Server, usecase *biz.PushUsecase) *PushService {
 // PushMsg 推送消息
 func (s *PushService) PushMsg(ctx context.Context, req *pb.PushMsgRequest) (*pb.PushMsgReply, error) {
 
-	//获取目标id
-	uid := uint(req.GetUserId())
+	//uidValue := ctx.Value("user_id")
+	//sid, ok := uidValue.(float64)
+	//if !ok {
+	//	return nil, PushMessageError(errors.New("invalid or missing user_id in context"))
+	//}
+	////获取目标id
+	//uid := uint(req.GetUserId())
 
 	//不在这里处理消息
 	////根据消息类型解析消息
@@ -54,8 +59,18 @@ func (s *PushService) PushMsg(ctx context.Context, req *pb.PushMsgRequest) (*pb.
 	//	return nil, PushMessageError(errors.New("未知消息类型"))
 	//}
 
+	sid := req.GetSelfUserId()
+
+	// 调用用户服务获取目标 user_id（如果有）
+	tid, err := s.UserClient.GetIdByUnique(ctx, &v1.GetIdByUniqueRequest{
+		UniqueId: req.ToUnique,
+	})
+	if err != nil {
+		return nil, PushMessageError(err)
+	}
+
 	//消息经过base64编码
-	err := s.UC.PushMessage(uid, req.GetPayload(), int(req.GetMsgType()))
+	err = s.UC.PushMessage(uint(tid.GetUserId()), req.GetPayload(), int(req.GetMsgType()), uint(sid))
 	if err != nil {
 		return nil, PushMessageError(err)
 	}
