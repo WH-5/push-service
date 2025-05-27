@@ -17,11 +17,6 @@ func (d *pushRepo) Store(uid uint, msg []byte) error {
 	ctx := context.Background()
 	key := fmt.Sprintf("O%d", uid)
 
-	//fmt.Println("Store() -> UID:", uid)
-	//fmt.Println("Store() -> Key:", key)
-	//fmt.Println("Store() -> Message:", msg)
-	//fmt.Println("Store() -> ExpireAfter:", d.data.RD.expireAfter)
-
 	// 使用 Redis pipeline 保证原子性
 	pipe := d.data.RD.rdb.TxPipeline()
 

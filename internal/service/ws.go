@@ -1,7 +1,10 @@
 package service
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
+	v1 "github.com/WH-5/push-service/api/user/v1"
 	"github.com/WH-5/push-service/internal/pkg"
 	"github.com/golang-jwt/jwt/v5"
 	"log"
@@ -15,8 +18,8 @@ import (
 // 升级器：把 HTTP 协议升级为 WebSocket
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
-		// 不校验来源，方便测试
-		//TODO 需要限制来源
+		// 目前不校验来源，方便测试
+
 		return true
 	},
 }
@@ -88,7 +91,7 @@ func NewWSHandler(service *PushService) func(w http.ResponseWriter, r *http.Requ
 		})
 		for {
 			// 读取消息
-			messageType, message, err := conn.ReadMessage()
+			_, message, err := conn.ReadMessage()
 			if err != nil {
 				//断开了
 				//下线函数
@@ -96,32 +99,59 @@ func NewWSHandler(service *PushService) func(w http.ResponseWriter, r *http.Requ
 				log.Println("读取消息失败:", err)
 				break
 			}
-			if len(message) == 0 {
-				log.Println("ping")
-				err = conn.WriteMessage(websocket.PongMessage, []byte("pong"))
-				if err != nil {
-					service.UC.OnDisconnect(uint(uid.(float64)))
-					log.Println("发送 pong 消息失败:", err)
-					break
-				}
-			} else {
-				log.Printf("收到消息: %s\n", message)
-				reply := fmt.Sprintf("你发的是：%s", message)
-				err = conn.WriteMessage(messageType, []byte(reply))
-				if err != nil {
-					//同样断开
-					//下线函数
-					service.UC.OnDisconnect(uint(uid.(float64)))
-					log.Println("发送消息失败:", err)
-					break
-				}
-			}
-			// 向客户端原样发送消息
-			//if string(message) == "ping" {
-			//	//ping 测试
-			//	continue
-			//}
 
+			log.Printf("收到消息: %s\n", message)
+
+			var msgData map[string]interface{}
+			if err := json.Unmarshal(message, &msgData); err != nil {
+				log.Println("无法解析消息为 JSON:", err)
+				continue
+			}
+
+			mType, ok := msgData["type"].(float64) // JSON 中数字默认是 float64
+			if !ok {
+				log.Println("消息缺少 type 字段或类型错误")
+				continue
+			}
+
+			if int(mType) == 1 {
+
+				log.Println("收到聊天消息，待处理...")
+
+				tidStr, ok := msgData["target_unique"].(string)
+				if !ok {
+					log.Println("缺少或非法 target_unique 字段")
+					continue
+				}
+				sid := uint(uid.(float64))
+				tid, err := service.UserClient.GetIdByUnique(context.Background(), &v1.GetIdByUniqueRequest{
+					UniqueId: tidStr,
+				})
+				if err != nil {
+					log.Println(err)
+				}
+
+				idMany, err := service.UserClient.GetUniqueByIdMany(context.Background(), &v1.GetUniqueByIdManyRequest{
+					UserId: uint64(sid),
+				})
+				if err != nil {
+					return
+				}
+				err = service.UC.PushMessage(uint(tid.UserId), message, int(mType), idMany.GetUniqueId())
+				if err != nil {
+					log.Printf("转发消息失败: %v", err)
+				}
+				log.Printf("转发消息成功")
+
+			} else if int(mType) == 2 {
+				// TODO:处理好友消息
+				log.Printf("收到好友消息")
+			} else if int(mType) == 0 {
+
+				log.Printf("收到ping消息")
+			} else {
+				log.Printf("收到其他类型消息：%v", mType)
+			}
 		}
 	}
 

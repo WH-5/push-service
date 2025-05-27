@@ -27,14 +27,14 @@ func NewPushUsecase(cf *conf.Bizfig, repo PushRepo, logger log.Logger) *PushUsec
 }
 
 // PushMessage 推送消息
-func (u *PushUsecase) PushMessage(tid uint, msg []byte, m_type int, sid uint) error {
+func (u *PushUsecase) PushMessage(tid uint, msg []byte, m_type int, sid string) error {
 	//在线
 	on := u.repo.IsOnline(tid)
 
 	data := map[string]interface{}{
 		"type":      m_type,
 		"payload":   msg,
-		"user_id":   sid, //发送者的id
+		"unique_id": sid, //发送者的id
 		"timestamp": time.Now().Format("2006-01-02 15:04:05"),
 	}
 	b, err := json.Marshal(data)

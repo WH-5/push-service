@@ -5,6 +5,9 @@ import (
 	"sync"
 )
 
+type ConnManager struct {
+	conns sync.Map // map[userID]string -> *websocket.Conn
+}
 type WSData struct {
 	//连接池
 	CM *ConnManager
@@ -19,10 +22,6 @@ func NewWSData() *WSData {
 		},
 		OnlineUsers: sync.Map{}, // 初始化 OnlineUsers 字段
 	}
-}
-
-type ConnManager struct {
-	conns sync.Map // map[userID]string -> *websocket.Conn
 }
 
 // Add 注册连接，踢掉旧连接

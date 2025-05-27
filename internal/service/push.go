@@ -68,9 +68,15 @@ func (s *PushService) PushMsg(ctx context.Context, req *pb.PushMsgRequest) (*pb.
 	if err != nil {
 		return nil, PushMessageError(err)
 	}
-
+	//TODO从user服务获取id的unique
+	idMany, err := s.UserClient.GetUniqueByIdMany(ctx, &v1.GetUniqueByIdManyRequest{
+		UserId: sid,
+	})
+	if err != nil {
+		return nil, err
+	}
 	//消息经过base64编码
-	err = s.UC.PushMessage(uint(tid.GetUserId()), req.GetPayload(), int(req.GetMsgType()), uint(sid))
+	err = s.UC.PushMessage(uint(tid.GetUserId()), req.GetPayload(), int(req.GetMsgType()), idMany.GetUniqueId())
 	if err != nil {
 		return nil, PushMessageError(err)
 	}
